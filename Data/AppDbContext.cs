@@ -10,5 +10,6 @@ namespace InventoryAPI.Data
         }
 
         public DbSet<Products> Products { get; set; } = null!;
+        public DbSet<Inventory> Inventory { get; set; } = null!;
     }
 }
