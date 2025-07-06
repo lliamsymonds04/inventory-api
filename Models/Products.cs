@@ -9,4 +9,6 @@ public class Products
     public int Quantity { get; set; }
     public string? Category { get; set; }
     public string? ImageUrl { get; set; }
+    public int MinStockLevel { get; set; } = 10;
+    public bool IsLowStock => Quantity < MinStockLevel;
 }
