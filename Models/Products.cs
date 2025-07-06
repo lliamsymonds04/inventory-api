@@ -1,4 +1,4 @@
-namespace InvetoryAPI.Models;
+namespace InventoryAPI.Models;
 
 public class Products
 {
