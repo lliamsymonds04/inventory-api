@@ -108,3 +108,4 @@ StyleCopReport.xml
 
 # dotenv
 .env
+appsettings.Development.json
