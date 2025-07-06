@@ -79,7 +79,16 @@ public class ProductController : ControllerBase
         await _context.SaveChangesAsync();
 
         return NoContent();
-    } 
+    }
+
+    [HttpGet("low-stock")]
+    public async Task<ActionResult<IEnumerable<Products>>> GetLowStockProducts()
+    {
+        var lowStockProducts = await _context.Products
+            .Where(p => p.IsLowStock)
+            .ToListAsync();
+        return lowStockProducts;
+    }
 
     private bool ProductExists(int id)
     {
