@@ -1,12 +1,13 @@
 ### Variables (optional)
 @baseUrl = http://localhost:5064
 @contentType = application/json
+@productRef = 3
 
 ### Get all products
 GET {{baseUrl}}/api/Product
 
 ### Get specific product
-GET {{baseUrl}}/api/Product/1
+GET {{baseUrl}}/api/Product/{{productRef}}
 
 ### Create new product
 POST {{baseUrl}}/api/Product
@@ -14,18 +15,18 @@ Content-Type: {{contentType}}
 
 {
   "name": "Test Product",
-  "price": 29.99
+  "price": 79.99
 }
 
 ### Update product
-PUT {{baseUrl}}/api/Product/1
+PUT {{baseUrl}}/api/Product/{{productRef}}
 Content-Type: {{contentType}}
 
 {
-  "id": 1,
+  "id": 4,
   "name": "Updated Product",
   "price": 39.99
 }
 
 ### Delete product
-DELETE {{baseUrl}}/api/products/1
+DELETE {{baseUrl}}/api/Product/{{productRef}}
