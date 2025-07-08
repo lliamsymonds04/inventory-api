@@ -1,4 +1,5 @@
 using InventoryAPI.Data;
+using InventoryAPI.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,9 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+//register services
+builder.Services.AddScoped<StockLogService>();
 
 app.MapControllers();
 app.UseAuthorization();
