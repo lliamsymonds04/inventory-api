@@ -4,8 +4,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InventoryAPI.Services;
 
+public interface IStockLogService
+{
+    Task LogStockChangeAsync(int productId, int warehouseId,
+        int quantityChange, int quantityBefore, string changeType, string userId);
 
-public class StockLogService
+    Task<IEnumerable<StockLog>> GetStockLogsAsync(int? productId = null, int? warehouseId = null,
+        DateTime? fromDate = null, DateTime? toDate = null, string? changeType = null);
+}
+
+public class StockLogService: IStockLogService
 {
     private readonly AppDbContext _context;
 
