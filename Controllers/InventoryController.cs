@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using InventoryAPI.Data;
 using InventoryAPI.Models;
+using InventoryAPI.Services;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -9,10 +10,12 @@ using Microsoft.EntityFrameworkCore;
 public class InventoryController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IStockLogService _stockLogService;
 
-    public InventoryController(AppDbContext context)
+    public InventoryController(AppDbContext context, IStockLogService stockLogService)
     {
         _context = context;
+        _stockLogService = stockLogService;
     }
 
     [HttpGet]
@@ -83,7 +86,12 @@ public class InventoryController : ControllerBase
 
         _context.Inventory.Add(inventory);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetInventoryByWarehouseAndProduct), 
+
+        // log the stock change
+        await _stockLogService.LogStockChangeAsync(
+            productId, warehouseId, request.Quantity, 0, "Initial inventory creation", "system");
+        
+        return CreatedAtAction(nameof(GetInventoryByWarehouseAndProduct),
             new { warehouseId = warehouseId, productId = productId }, inventory);
     }
 
@@ -112,6 +120,10 @@ public class InventoryController : ControllerBase
         try
         {
             await _context.SaveChangesAsync();
+
+            // log the restock
+            await _stockLogService.LogStockChangeAsync(
+                productId, warehouseId, quantity, inventory.Quantity - quantity, "restock", "system");
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -187,6 +199,10 @@ public class InventoryController : ControllerBase
         try
         {
             await _context.SaveChangesAsync();
+
+            // log the deplete
+            await _stockLogService.LogStockChangeAsync(
+                productId, warehouseId, -quantity, inventory.Quantity + quantity, "deplete", "system");
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -325,6 +341,17 @@ public class InventoryController : ControllerBase
         try
         {
             await _context.SaveChangesAsync();
+
+            // log the outgoing transfer
+            await _stockLogService.LogStockChangeAsync(
+                request.ProductId, request.SourceWarehouseId, -request.Quantity,
+                sourceInventory.Quantity + request.Quantity, "transfer out", "system");
+
+            // log the incoming transfer
+            await _stockLogService.LogStockChangeAsync(
+                request.ProductId, request.DestinationWarehouseId, request.Quantity,
+                destinationInventory.Quantity - request.Quantity, "transfer in", "system");
+
         }
         catch (DbUpdateConcurrencyException)
         {
