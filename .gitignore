@@ -112,3 +112,6 @@ StyleCopReport.xml
 #appsettings files
 appsettings.json
 appsettings.Development.json
+
+.Migrations/
+# Ignore migrations folder if it exists

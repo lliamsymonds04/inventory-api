@@ -15,15 +15,15 @@ public class ProductController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Products>>> GetProducts()
+    public async Task<ActionResult<IEnumerable<Product>>> GetProduct()
     {
-        return await _context.Products.ToListAsync();
+        return await _context.Product.ToListAsync();
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Products>> GetProduct(int id)
+    public async Task<ActionResult<Product>> GetProduct(int id)
     {
-        var product = await _context.Products.FindAsync(id);
+        var product = await _context.Product.FindAsync(id);
         if (product == null)
         {
             return NotFound();
@@ -33,15 +33,15 @@ public class ProductController : ControllerBase
 
     [HttpPost]
 
-    public async Task<ActionResult<Products>> CreateProduct(Products product)
+    public async Task<ActionResult<Product>> CreateProduct(Product product)
     {
-        _context.Products.Add(product);
+        _context.Product.Add(product);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateProduct(int id, Products product)
+    public async Task<IActionResult> UpdateProduct(int id, Product product)
     {
         if (id != product.Id)
         {
@@ -69,29 +69,20 @@ public class ProductController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProduct(int id)
     {
-        var product = await _context.Products.FindAsync(id);
+        var product = await _context.Product.FindAsync(id);
         if (product == null)
         {
             return NotFound();
         }
 
-        _context.Products.Remove(product);
+        _context.Product.Remove(product);
         await _context.SaveChangesAsync();
 
         return NoContent();
     }
 
-    [HttpGet("low-stock")]
-    public async Task<ActionResult<IEnumerable<Products>>> GetLowStockProducts()
-    {
-        var lowStockProducts = await _context.Products
-            .Where(p => p.IsLowStock)
-            .ToListAsync();
-        return lowStockProducts;
-    }
-
     private bool ProductExists(int id)
     {
-        return _context.Products.Any(e => e.Id == id);
+        return _context.Product.Any(e => e.Id == id);
     }
 }
