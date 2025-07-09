@@ -2,6 +2,7 @@ namespace InventoryAPI.Models;
 
 public class StockLog
 {
+    public int Id { get; set; }
     public int ProductId { get; set; }
     public int WarehouseId { get; set; }
     public int QuantityChange { get; set; }
