@@ -61,6 +61,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register([FromBody] LoginRequest request)
     {
         var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
+        
         if (existingUser != null)
         {
             return BadRequest("Username already exists.");
