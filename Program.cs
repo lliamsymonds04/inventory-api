@@ -10,6 +10,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
+//register custom services
+builder.Services.AddScoped<StockLogService>();
+
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"];
 
@@ -52,8 +55,6 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-//register services
-builder.Services.AddScoped<StockLogService>();
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -55,7 +55,6 @@ public class AuthController : ControllerBase
             Token = token,
             role = user.Role,
         });
-
     }
 
     [HttpPost("register")]
