@@ -49,7 +49,7 @@ public class AuthController : ControllerBase
         user.LastLogin = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        var token = GenerateJwtToken(request.Username);
+        var token = GenerateJwtToken(request.Username, user.Role);
         return Ok(new
         {
             Token = token,
@@ -82,7 +82,7 @@ public class AuthController : ControllerBase
         _context.Users.Add(newUser);
         await _context.SaveChangesAsync();
 
-        var token = GenerateJwtToken(newUser.Username);
+        var token = GenerateJwtToken(newUser.Username, newUser.Role);
         return Ok(new
         {
             Token = token,
@@ -90,7 +90,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    private string GenerateJwtToken(string username)
+    private string GenerateJwtToken(string username, string role)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"];
@@ -108,7 +108,8 @@ public class AuthController : ControllerBase
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, username),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(ClaimTypes.Role, role)
         };
 
         var token = new JwtSecurityToken(

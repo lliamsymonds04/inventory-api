@@ -7,6 +7,6 @@ public class User
     public required string PasswordHash { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime LastLogin { get; set; } = DateTime.UtcNow;
-    public string? Role { get; set; } = "customer"; // Default role
+    public required string Role { get; set; } = "customer"; // Default role
 
 }
