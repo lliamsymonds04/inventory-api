@@ -1,8 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using InventoryAPI.Models;
 using InventoryAPI.Data;
 using Microsoft.AspNetCore.Mvc;
 
+[ApiController]
+[Route("api/[controller]")]
 public class WarehouseController : ControllerBase
 {
     private readonly AppDbContext _context;
@@ -13,12 +16,14 @@ public class WarehouseController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin,Warehouse")]
     public async Task<ActionResult<IEnumerable<Warehouse>>> GetWarehouses()
     {
         return await _context.Warehouses.ToListAsync();
     }
 
     [HttpGet("{id}")]
+    [Authorize(Roles = "Admin,Warehouse")]
     public async Task<ActionResult<Warehouse>> GetWarehouse(int id)
     {
         var warehouse = await _context.Warehouses.FindAsync(id);
@@ -30,6 +35,7 @@ public class WarehouseController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<Warehouse>> CreateWarehouse(Warehouse warehouse)
     {
         _context.Warehouses.Add(warehouse);
@@ -38,6 +44,7 @@ public class WarehouseController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateWarehouse(int id, Warehouse warehouse)
     {
         if (id != warehouse.Id)
@@ -66,6 +73,7 @@ public class WarehouseController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteWarehouse(int id)
     {
         var warehouse = await _context.Warehouses.FindAsync(id);
