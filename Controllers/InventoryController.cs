@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using InventoryAPI.Data;
 using InventoryAPI.Models;
 using InventoryAPI.Services;
-using Microsoft.EntityFrameworkCore;
 
 
 [ApiController]
@@ -19,6 +20,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin,Warehouse")]
     public async Task<ActionResult<IEnumerable<Inventory>>> GetInventory([FromQuery] int? warehouseId = null)
     {
         var query = _context.Inventory.AsQueryable();
@@ -32,6 +34,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize(Roles = "Admin,Warehouse")]
     public async Task<ActionResult<Inventory>> GetInventory(int id)
     {
         var inventory = await _context.Inventory.FindAsync(id);
@@ -43,6 +46,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<Inventory>> CreateInventory(Inventory inventory)
     {
         // Verify warehouse exists
@@ -52,12 +56,28 @@ public class InventoryController : ControllerBase
             return BadRequest($"Warehouse with ID {inventory.WarehouseId} not found.");
         }
 
+        // Verify product exists
+        var productExists = await _context.Products.AnyAsync(p => p.Id == inventory.ProductId);
+        if (!productExists)
+        {
+            return BadRequest($"Product with ID {inventory.ProductId} not found.");
+        }
+
+        // Check if inventory already exists for this product in this warehouse
+        var existingInventory = await _context.Inventory
+            .FirstOrDefaultAsync(i => i.ProductId == inventory.ProductId && i.WarehouseId == inventory.WarehouseId);
+        if (existingInventory != null)
+        {
+            return BadRequest($"Inventory already exists for product {inventory.ProductId} in warehouse {inventory.WarehouseId}.");
+        }
+
         _context.Inventory.Add(inventory);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetInventory), new { id = inventory.ProductId }, inventory);
     }
 
     [HttpPost("warehouse/{warehouseId}/product/{productId}")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<Inventory>> CreateInventoryForWarehouse(int warehouseId, int productId, [FromBody] CreateInventoryRequest request)
     {
         // Verify warehouse exists
@@ -65,6 +85,13 @@ public class InventoryController : ControllerBase
         if (!warehouseExists)
         {
             return BadRequest($"Warehouse with ID {warehouseId} not found.");
+        }
+
+        // Verify product exists
+        var productExists = await _context.Products.AnyAsync(p => p.Id == productId);
+        if (!productExists)
+        {
+            return BadRequest($"Product with ID {productId} not found.");
         }
 
         // Check if inventory already exists for this product in this warehouse
@@ -96,6 +123,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpPost("warehouse/{warehouseId}/restock/{productId}")]
+    [Authorize(Roles = "Admin,Warehouse")]
     public async Task<IActionResult> RestockInventoryByWarehouse(int warehouseId, int productId, [FromBody] int quantity)
     {
         // Verify warehouse exists
@@ -138,6 +166,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpPost("{id}/deplete")]
+    [Authorize(Roles = "Admin,Warehouse")]
     public async Task<IActionResult> DepleteInventory(int id, int quantity)
     {
         var inventory = await _context.Inventory.FindAsync(id);
@@ -171,6 +200,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpPost("warehouse/{warehouseId}/deplete/{productId}")]
+    [Authorize(Roles = "Admin,Warehouse")]
     public async Task<IActionResult> DepleteInventoryByWarehouse(int warehouseId, int productId, [FromBody] int quantity)
     {
         // Verify warehouse exists
@@ -232,6 +262,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpGet("warehouse/{warehouseId}")]
+    [Authorize(Roles = "Admin,Warehouse")]
     public async Task<ActionResult<IEnumerable<Inventory>>> GetInventoryByWarehouse(int warehouseId)
     {
         // Verify warehouse exists
@@ -248,7 +279,8 @@ public class InventoryController : ControllerBase
         return inventory;
     }
 
-    [HttpGet("product/{productId}")]
+    [HttpGet("product-inventory/{productId}")]
+    [Authorize(Roles = "Admin,Warehouse")]
     public async Task<ActionResult<IEnumerable<Inventory>>> GetInventoryByProduct(int productId)
     {
         var inventory = await _context.Inventory
@@ -259,6 +291,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpGet("warehouse/{warehouseId}/product/{productId}")]
+    [Authorize(Roles = "Admin,Warehouse")]
     public async Task<ActionResult<Inventory>> GetInventoryByWarehouseAndProduct(int warehouseId, int productId)
     {
         // Verify warehouse exists
@@ -280,6 +313,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpPost("transfer")]
+    [Authorize(Roles = "Admin,Warehouse")]
     public async Task<IActionResult> TransferInventory([FromBody] TransferRequest request)
     {
         // Verify both warehouses exist
