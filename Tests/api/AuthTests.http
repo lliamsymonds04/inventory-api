@@ -1,5 +1,3 @@
-
-
 @baseUrl = {{url}}
 @contentType = application/json
 @username = {{testUser}}

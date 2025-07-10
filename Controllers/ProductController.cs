@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using InventoryAPI.Models;
 using InventoryAPI.Data;
 
@@ -32,7 +33,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpPost]
-
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<Product>> CreateProduct(Product product)
     {
         _context.Products.Add(product);
@@ -41,6 +42,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateProduct(int id, Product product)
     {
         if (id != product.Id)
@@ -67,6 +69,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteProduct(int id)
     {
         var product = await _context.Products.FindAsync(id);
