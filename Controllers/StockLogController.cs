@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using InventoryAPI.Models;
 using InventoryAPI.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace InventoryAPI.Controllers;
 
@@ -16,6 +17,7 @@ public class StockLogController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin,Warehouse")]
     public async Task<ActionResult<IEnumerable<StockLog>>> GetStockLogs(
         [FromQuery] int? productId = null,
         [FromQuery] int? warehouseId = null,
