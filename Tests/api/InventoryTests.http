@@ -1,0 +1,72 @@
+@baseUrl = {{url}}
+@contentType = application/json
+@productRef = 3
+@warehouseRef = 1
+
+
+### ========================================
+### INVENTORY ENDPOINTS
+### ========================================
+
+### Get all inventory
+GET {{baseUrl}}/api/Inventory
+
+### Get inventory by warehouse
+GET {{baseUrl}}/api/Inventory?warehouseId={{warehouseRef}}
+
+### Get inventory for specific warehouse
+GET {{baseUrl}}/api/Inventory/warehouse/{{warehouseRef}}
+
+### Get inventory for specific product
+GET {{baseUrl}}/api/Inventory/product/{{productRef}}
+
+### Get inventory for specific product in specific warehouse
+GET {{baseUrl}}/api/Inventory/warehouse/{{warehouseRef}}/product/{{productRef}}
+
+### Create inventory for warehouse and product
+POST {{baseUrl}}/api/Inventory/warehouse/{{warehouseRef}}/product/{{productRef}}
+Content-Type: {{contentType}}
+
+{
+  "quantity": 40,
+  "minStockLevel": 20
+}
+
+### Restock inventory by warehouse
+POST {{baseUrl}}/api/Inventory/warehouse/{{warehouseRef}}/restock/{{productRef}}
+Content-Type: {{contentType}}
+
+30
+
+### Deplete inventory by warehouse
+POST {{baseUrl}}/api/Inventory/warehouse/{{warehouseRef}}/deplete/{{productRef}}
+Content-Type: {{contentType}}
+
+10
+
+### Get low stock items
+GET {{baseUrl}}/api/Inventory/low-stock
+
+### Get low stock items for specific warehouse
+GET {{baseUrl}}/api/Inventory/low-stock?warehouseId={{warehouseRef}}
+
+### Transfer inventory between warehouses
+POST {{baseUrl}}/api/Inventory/transfer
+Content-Type: {{contentType}}
+
+{
+  "productId": {{productRef}},
+  "sourceWarehouseId": {{warehouseRef}},
+  "destinationWarehouseId": 2,
+  "quantity": 15
+}
+
+### ========================================
+### WAREHOUSE ENDPOINTS
+### ========================================
+
+### Get all warehouses
+GET {{baseUrl}}/api/Warehouse
+
+### Get specific warehouse
+GET {{baseUrl}}/api/Warehouse/{{warehouseRef}}
