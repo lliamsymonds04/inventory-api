@@ -115,5 +115,3 @@ appsettings.Development.json
 
 Migrations/
 # Ignore migrations folder if it exists
-
-Tests/api

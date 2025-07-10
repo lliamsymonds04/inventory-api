@@ -1,0 +1,25 @@
+
+
+@baseUrl = {{url}}
+@contentType = application/json
+@username = {{testUser}}
+@password = {{testPassword}}
+
+### Register a new user
+POST {{baseUrl}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+    "Username": "{{username}}",
+    "Password": "{{password}}"
+}
+
+
+### Login with existing user
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+    "Username": "{{username}}",
+    "Password": "{{password}}"
+}
