@@ -70,4 +70,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.UseCors("AllowFrontend");
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.Run();
