@@ -1,7 +1,6 @@
 using InventoryAPI.Data;
 using InventoryAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,10 +29,10 @@ connectionString = connectionString.Replace("{DatabasePassword}", databasePasswo
 
 // Add DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 // Register custom services
-builder.Services.AddScoped<StockLogService>();
+builder.Services.AddScoped<IStockLogService, StockLogService>();
 
 // Configure JWT authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -65,11 +64,17 @@ builder.Services.AddAuthentication(options =>
 // Add CORS policy
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllOrigins",
-        builder => builder.AllowAnyOrigin()
+    options.AddPolicy("AllowFrontend",
+        builder => builder.WithOrigins("http://localhost:5000") // Adjust the origin as needed
                           .AllowAnyMethod()
                           .AllowAnyHeader()
                           .AllowCredentials());
+});
+
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.RedirectStatusCode = StatusCodes.Status307TemporaryRedirect;
+    options.HttpsPort = 7001; // Your HTTPS port from launchSettings.json
 });
 
 // Build App
@@ -78,6 +83,10 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+}
+else
+{
+    app.UseHttpsRedirection();
 }
 
 // Exception handling
