@@ -93,6 +93,24 @@ public class AuthController : ControllerBase
         });
     }
 
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        // Clear the JWT cookie
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddDays(-1) // Set to a past date to clear the cookie
+        };
+
+        var cookieName = _configuration["JwtSettings:AuthTokenName"] ?? "auth_token";
+        Response.Cookies.Append(cookieName, "", cookieOptions);
+
+        return Ok("Logged out successfully.");
+    }
+
     private string HandleToken(User user)
     {
         var token = _authService.GenerateJwtToken(user.Username, user.Role);
@@ -105,7 +123,8 @@ public class AuthController : ControllerBase
             Expires = DateTime.UtcNow.AddMinutes(_configuration.GetValue<int>("JwtSettings:ExpiryTime"))
         };
 
-        Response.Cookies.Append("auth_token", token, cookieOptions);
+        var cookieName = _configuration["JwtSettings:AuthTokenName"] ?? "auth_token";
+        Response.Cookies.Append(cookieName, token, cookieOptions);
 
         return token;
     }

@@ -12,7 +12,7 @@ public class JwtFromCookieMiddleware
     public async Task InvokeAsync(HttpContext context)
     {
         // Get the cookie name
-        var jwtCookieName = _config["JwtSettings:CookieName"] ?? "jwt";
+        var jwtCookieName = _config["JwtSettings:AuthTokenName"] ?? "jwt";
 
         // Check if the JWT cookie exists
         if (context.Request.Cookies.TryGetValue(jwtCookieName, out var jwt))
