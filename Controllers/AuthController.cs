@@ -17,9 +17,9 @@ public class AuthController : ControllerBase
     private readonly IConfiguration _configuration;
     private readonly AppDbContext _context;
     private static readonly PasswordHasher<string> _passwordHasher = new PasswordHasher<string>();
-    private readonly AuthService _authService;
+    private readonly IAuthService _authService;
 
-    public AuthController(AppDbContext context, IConfiguration configuration, AuthService authService)
+    public AuthController(AppDbContext context, IConfiguration configuration, IAuthService authService)
     {
         _configuration = configuration;
         _context = context;

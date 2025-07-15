@@ -33,6 +33,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Register custom services
 builder.Services.AddScoped<IStockLogService, StockLogService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Configure JWT authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -65,7 +66,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
-        builder => builder.WithOrigins("http://localhost:5000") // Adjust the origin as needed
+        builder => builder.WithOrigins("http://localhost:3000")
                           .AllowAnyMethod()
                           .AllowAnyHeader()
                           .AllowCredentials());
@@ -74,7 +75,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddHttpsRedirection(options =>
 {
     options.RedirectStatusCode = StatusCodes.Status307TemporaryRedirect;
-    options.HttpsPort = 7001; // Your HTTPS port from launchSettings.json
+    options.HttpsPort = 7001;
 });
 
 // Build App
@@ -84,10 +85,7 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-else
-{
-    app.UseHttpsRedirection();
-}
+
 
 // Exception handling
 app.UseMiddleware<GlobalExceptionMiddleware>();
