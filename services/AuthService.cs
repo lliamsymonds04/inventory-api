@@ -1,4 +1,3 @@
-using InventoryAPI.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -11,6 +10,7 @@ public interface IAuthService
 
 public class AuthService : IAuthService
 {
+    private readonly int ExpiryTime = 60;
     private readonly IConfiguration _configuration;
 
     public AuthService(IConfiguration configuration)
@@ -29,7 +29,7 @@ public class AuthService : IAuthService
         }
 
         var creds = new SigningCredentials(
-            new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(secretKey)),
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
             SecurityAlgorithms.HmacSha256
         );
 
@@ -44,10 +44,12 @@ public class AuthService : IAuthService
             issuer: jwtSettings["Issuer"],
             audience: jwtSettings["Audience"],
             claims: claims,
-            expires: DateTime.Now.AddMinutes(60),
+            expires: DateTime.UtcNow.AddMinutes(ExpiryTime),
             signingCredentials: creds
         );
-
+        
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+   
 }

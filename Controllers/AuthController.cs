@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using InventoryAPI.Data;
 using InventoryAPI.Models;
 using Microsoft.AspNetCore.Identity;
+using System.Reflection.Metadata;
 
 namespace InventoryAPI.Controllers;
 
@@ -51,11 +52,10 @@ public class AuthController : ControllerBase
         user.LastLogin = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        // var token = GenerateJwtToken(request.Username, user.Role);
-        var token = _authService.GenerateJwtToken(request.Username, user.Role);
+        var token = HandleToken(user);
+
         return Ok(new
         {
-            Token = token,
             role = user.Role,
         });
     }
@@ -64,7 +64,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register([FromBody] LoginRequest request)
     {
         var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
-        
+
         if (existingUser != null)
         {
             return BadRequest("Username already exists.");
@@ -85,12 +85,28 @@ public class AuthController : ControllerBase
         _context.Users.Add(newUser);
         await _context.SaveChangesAsync();
 
-        // var token = GenerateJwtToken(newUser.Username, newUser.Role);
-        var token = _authService.GenerateJwtToken(newUser.Username, newUser.Role);
+        var token = HandleToken(newUser);
+
         return Ok(new
         {
-            Token = token,
             role = newUser.Role,
         });
+    }
+
+    private string HandleToken(User user)
+    {
+        var token = _authService.GenerateJwtToken(user.Username, user.Role);
+
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddMinutes(_configuration.GetValue<int>("JwtSettings:ExpiryTime"))
+        };
+
+        Response.Cookies.Append("auth_token", token, cookieOptions);
+
+        return token;
     }
 }
