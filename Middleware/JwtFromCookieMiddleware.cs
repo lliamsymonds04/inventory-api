@@ -1,9 +1,9 @@
-public class JwtFromCookie
+public class JwtFromCookieMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly IConfiguration _config;
 
-    public JwtFromCookie(RequestDelegate next, IConfiguration configuration)
+    public JwtFromCookieMiddleware(RequestDelegate next, IConfiguration configuration)
     {
         _next = next;
         _config = configuration;

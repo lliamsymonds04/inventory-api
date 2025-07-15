@@ -92,6 +92,9 @@ else
 // Exception handling
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
+// Jwt authentication
+app.UseMiddleware<JwtFromCookieMiddleware>();
+
 // Cors
 app.UseCors("AllowFrontend");
 
