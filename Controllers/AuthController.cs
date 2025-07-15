@@ -16,11 +16,13 @@ public class AuthController : ControllerBase
     private readonly IConfiguration _configuration;
     private readonly AppDbContext _context;
     private static readonly PasswordHasher<string> _passwordHasher = new PasswordHasher<string>();
+    private readonly AuthService _authService;
 
-    public AuthController(AppDbContext context, IConfiguration configuration)
+    public AuthController(AppDbContext context, IConfiguration configuration, AuthService authService)
     {
         _configuration = configuration;
         _context = context;
+        _authService = authService;
     }
 
     public class LoginRequest
@@ -49,7 +51,8 @@ public class AuthController : ControllerBase
         user.LastLogin = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        var token = GenerateJwtToken(request.Username, user.Role);
+        // var token = GenerateJwtToken(request.Username, user.Role);
+        var token = _authService.GenerateJwtToken(request.Username, user.Role);
         return Ok(new
         {
             Token = token,
@@ -82,44 +85,12 @@ public class AuthController : ControllerBase
         _context.Users.Add(newUser);
         await _context.SaveChangesAsync();
 
-        var token = GenerateJwtToken(newUser.Username, newUser.Role);
+        // var token = GenerateJwtToken(newUser.Username, newUser.Role);
+        var token = _authService.GenerateJwtToken(newUser.Username, newUser.Role);
         return Ok(new
         {
             Token = token,
             role = newUser.Role,
         });
-    }
-
-    private string GenerateJwtToken(string username, string role)
-    {
-        var jwtSettings = _configuration.GetSection("JwtSettings");
-        var secretKey = jwtSettings["SecretKey"];
-
-        if (string.IsNullOrEmpty(secretKey))
-        {
-            throw new InvalidOperationException("JWT Secret Key is not configured.");
-        }
-
-        var creds = new SigningCredentials(
-            new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(secretKey)),
-            SecurityAlgorithms.HmacSha256
-        );
-
-        var claims = new[]
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, username),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(ClaimTypes.Role, role)
-        };
-
-        var token = new JwtSecurityToken(
-            issuer: jwtSettings["Issuer"],
-            audience: jwtSettings["Audience"],
-            claims: claims,
-            expires: DateTime.Now.AddMinutes(60),
-            signingCredentials: creds
-        );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }
