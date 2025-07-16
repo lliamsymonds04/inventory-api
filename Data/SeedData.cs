@@ -40,6 +40,8 @@ public static class SeedData
             LastLogin = DateTime.UtcNow
         };
 
+        Console.WriteLine("==/ Created admin user");
+
         context.Users.Add(adminUser);
         await context.SaveChangesAsync();
     }
