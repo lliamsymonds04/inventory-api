@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.DependencyInjection;
 using InventoryAPI.Data;
-using InventoryAPI.Models; 
+using InventoryAPI.Models;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 public static class SeedData
 {
@@ -9,6 +10,9 @@ public static class SeedData
     public static async Task InitializeAsync(IServiceProvider serviceProvider)
     {
         await CreateAdminUser(serviceProvider);
+        await CreateBaseWarehouse(serviceProvider);
+        await CreateBaseProducts(serviceProvider);
+        await CreateBaseInventory(serviceProvider);
     }
 
     private static async Task CreateAdminUser(IServiceProvider serviceProvider)
@@ -43,6 +47,85 @@ public static class SeedData
         Console.WriteLine("==/ Created admin user");
 
         context.Users.Add(adminUser);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task CreateBaseWarehouse(IServiceProvider serviceProvider)
+    {
+        var context = serviceProvider.GetRequiredService<AppDbContext>();
+
+        if (await context.Warehouses.AnyAsync())
+        {
+            return; // Base warehouse already exists
+        }
+
+        var baseWarehouse = new Warehouse
+        {
+            Name = "Base Warehouse",
+            Location = "Default Location",
+        };
+
+        Console.WriteLine("==/ Created base warehouse");
+
+        context.Warehouses.Add(baseWarehouse);
+        await context.SaveChangesAsync();
+
+        Console.WriteLine($"==/ Base warehouse created with ID: {baseWarehouse.Id}");
+    }
+
+    private static async Task CreateBaseProducts(IServiceProvider serviceProvider)
+    {
+        //load the json file with the products
+        var context = serviceProvider.GetRequiredService<AppDbContext>();
+        if (await context.Products.AnyAsync())
+        {
+            return; // Base products already exist
+        }
+
+        var productsJson = await File.ReadAllTextAsync("Data/SeedProducts.json");
+        var products = JsonSerializer.Deserialize<List<Product>>(productsJson);
+
+        if (products == null || !products.Any())
+        {
+            throw new InvalidOperationException("No products found in SeedProducts.json");
+        }
+
+        foreach (var product in products)
+        {
+            context.Products.Add(product);
+        }
+        Console.WriteLine("==/ Created base products");
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task CreateBaseInventory(IServiceProvider serviceProvider)
+    {
+        var context = serviceProvider.GetRequiredService<AppDbContext>();
+        if (await context.Inventory.AnyAsync())
+        {
+            return; // Base inventory already exists
+        }
+
+        var baseWarehouse = await context.Warehouses.FirstOrDefaultAsync();
+        if (baseWarehouse == null)
+        {
+            throw new InvalidOperationException("Base warehouse does not exist.");
+        }
+
+        var products = await context.Products.ToListAsync();
+        foreach (var product in products)
+        {
+            var inventoryItem = new Inventory
+            {
+                ProductId = product.Id,
+                WarehouseId = baseWarehouse.Id,
+                Quantity = 100, 
+                MinStockLevel = 10,
+            };
+            context.Inventory.Add(inventoryItem);
+        }
+        
+        Console.WriteLine("==/ Created base inventory");
         await context.SaveChangesAsync();
     }
 }
