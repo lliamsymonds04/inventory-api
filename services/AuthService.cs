@@ -9,6 +9,7 @@ public interface IAuthService
 {
     string GenerateJwtToken(string username, string role);
     ClaimsPrincipal? ValidateJwtToken(string token);
+    Task<bool> UserExistsAsync(string username);
 }
 
 public class AuthService : IAuthService
