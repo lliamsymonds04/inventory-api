@@ -15,5 +15,26 @@ namespace InventoryAPI.Data
         public DbSet<Warehouse> Warehouses { get; set; } = null!;
         public DbSet<StockLog> StockLogs { get; set; } = null!;
         public DbSet<User> Users { get; set; } = null!;
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Configure entity properties, relationships, etc.
+            modelBuilder.Entity<Product>().ToTable("Products");
+            modelBuilder.Entity<Inventory>().ToTable("Inventory");
+            modelBuilder.Entity<Warehouse>().ToTable("Warehouses");
+            modelBuilder.Entity<StockLog>().ToTable("StockLogs");
+            modelBuilder.Entity<User>().ToTable("Users");
+
+            // Additional configurations can be added here
+
+            modelBuilder.Entity<Product>(entity =>
+            {
+                entity.Property(p => p.Price)
+                    .HasColumnType("decimal(18,2)")
+                    .IsRequired();
+            });
+        }
     }
 }
