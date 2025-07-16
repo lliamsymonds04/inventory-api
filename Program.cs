@@ -86,6 +86,12 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+// Seed data
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    await SeedData.InitializeAsync(services);
+}
 
 // Exception handling
 app.UseMiddleware<GlobalExceptionMiddleware>();
