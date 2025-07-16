@@ -111,6 +111,21 @@ public class AuthController : ControllerBase
         return Ok("Logged out successfully.");
     }
 
+    [HttpGet("check")]
+    public IActionResult Check()
+    {
+        var cookieName = _configuration["JwtSettings:AuthTokenName"] ?? "auth_token";
+        if (Request.Cookies.TryGetValue(cookieName, out var token))
+        {
+            var principal = _authService.ValidateJwtToken(token);
+            if (principal != null)
+            {
+                return Ok("User is authenticated.");
+            }
+        }
+        return Unauthorized("User is not authenticated.");
+    }
+
     private string HandleToken(User user)
     {
         var token = _authService.GenerateJwtToken(user.Username, user.Role);
