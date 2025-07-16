@@ -6,6 +6,7 @@ using System.Text;
 public interface IAuthService
 {
     string GenerateJwtToken(string username, string role);
+    ClaimsPrincipal? ValidateJwtToken(string token);
 }
 
 public class AuthService : IAuthService
@@ -51,5 +52,38 @@ public class AuthService : IAuthService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-   
+    public ClaimsPrincipal? ValidateJwtToken(string token)
+    {
+        var jwtSettings = _configuration.GetSection("JwtSettings");
+        var secretKey = jwtSettings["SecretKey"];
+
+        if (string.IsNullOrEmpty(secretKey))
+        {
+            throw new InvalidOperationException("JWT Secret Key is not configured.");
+        }
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.UTF8.GetBytes(secretKey);
+
+        try
+        {
+            var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtSettings["Issuer"],
+                ValidAudience = jwtSettings["Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(key)
+            }, out SecurityToken validatedToken);
+
+            return principal;
+        }
+        catch
+        {
+            // Token validation failed
+            return null;
+        }
+    }
 }
