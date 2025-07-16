@@ -82,7 +82,7 @@ public static class SeedData
             return; // Base products already exist
         }
 
-        var productsJson = await File.ReadAllTextAsync("Data/SeedProducts.json");
+        var productsJson = await File.ReadAllTextAsync("Data/products.json");
         var products = JsonSerializer.Deserialize<List<Product>>(productsJson);
 
         if (products == null || !products.Any())
