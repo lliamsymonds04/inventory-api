@@ -2,6 +2,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using InventoryAPI.Data;
+using Microsoft.EntityFrameworkCore;
 
 public interface IAuthService
 {
@@ -13,9 +15,11 @@ public class AuthService : IAuthService
 {
     private readonly int ExpiryTime = 60;
     private readonly IConfiguration _configuration;
+    private readonly AppDbContext _context;
 
-    public AuthService(IConfiguration configuration)
+    public AuthService(IConfiguration configuration, AppDbContext context)
     {
+        _context = context;
         _configuration = configuration;
     }
 
@@ -48,7 +52,7 @@ public class AuthService : IAuthService
             expires: DateTime.UtcNow.AddMinutes(ExpiryTime),
             signingCredentials: creds
         );
-        
+
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
@@ -85,5 +89,10 @@ public class AuthService : IAuthService
             // Token validation failed
             return null;
         }
+    }
+
+    public async Task<bool> UserExistsAsync(string username)
+    {
+        return await _context.Users.AnyAsync(u => u.Username == username);
     }
 }
