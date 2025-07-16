@@ -1,25 +1,20 @@
-{
-    "products": [
-        {
-            "name": "Laptop",
-            "description": "High-performance laptop for professionals.",
-            "price": 1200.00,
-            "quantity": 50,
-            "category": "Electronics"
-        },
-        {
-            "name": "Smartphone",
-            "description": "Latest model smartphone with advanced features.",
-            "price": 800.00,
-            "quantity": 100,
-            "category": "Electronics"
-        },
-        {
-            "name": "Office Chair",
-            "description": "Ergonomic office chair for comfort and support.",
-            "price": 150.00,
-            "quantity": 200,
-            "category": "Furniture"
-        }
-    ]
-}
+[
+    {
+        "Name": "Laptop",
+        "Description": "High-performance laptop for professionals.",
+        "Price": 1200.00,
+        "Category": "Electronics"
+    },
+    {
+        "Name": "Smartphone",
+        "Description": "Latest model smartphone with advanced features.",
+        "Price": 800.00,
+        "Category": "Electronics"
+    },
+    {
+        "Name": "Office Chair",
+        "Description": "Ergonomic office chair for comfort and support.",
+        "Price": 150.00,
+        "Category": "Furniture"
+    }
+]
