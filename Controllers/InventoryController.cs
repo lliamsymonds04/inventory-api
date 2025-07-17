@@ -261,6 +261,20 @@ public class InventoryController : ControllerBase
         return lowStockItems;
     }
 
+    [HttpGet("no-stock")]
+    public async Task<ActionResult<IEnumerable<Inventory>>> GetNoStockItems([FromQuery] int? warehouseId = null)
+    {
+        var query = _context.Inventory.Where(i => i.Quantity == 0);
+        
+        if (warehouseId.HasValue)
+        {
+            query = query.Where(i => i.WarehouseId == warehouseId.Value);
+        }
+        
+        var noStockItems = await query.ToListAsync();
+        return noStockItems;
+    }
+
     [HttpGet("warehouse/{warehouseId}")]
     [Authorize(Roles = "Admin,Warehouse")]
     public async Task<ActionResult<IEnumerable<Inventory>>> GetInventoryByWarehouse(int warehouseId)
