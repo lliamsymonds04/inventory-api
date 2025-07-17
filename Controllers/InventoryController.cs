@@ -250,14 +250,16 @@ public class InventoryController : ControllerBase
     [HttpGet("low-stock")]
     public async Task<ActionResult<IEnumerable<Inventory>>> GetLowStockItems([FromQuery] int? warehouseId = null)
     {
-        var query = _context.Inventory.Where(i => i.IsLowStock);
-        
+        var query = _context.Inventory.AsQueryable();
+
         if (warehouseId.HasValue)
         {
             query = query.Where(i => i.WarehouseId == warehouseId.Value);
         }
-        
-        var lowStockItems = await query.ToListAsync();
+
+        var inventoryList = await query.ToListAsync();
+        var lowStockItems = inventoryList.Where(i => i.IsLowStock).ToList();
+
         return lowStockItems;
     }
 
