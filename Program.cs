@@ -85,6 +85,10 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+else
+{
+    app.UseHttpsRedirection();
+}
 
 // Seed data
 using (var scope = app.Services.CreateScope())
@@ -102,7 +106,6 @@ app.UseMiddleware<JwtFromCookieMiddleware>();
 // Cors
 app.UseCors("AllowFrontend");
 
-app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
