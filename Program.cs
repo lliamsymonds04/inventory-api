@@ -10,6 +10,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 builder.Services.AddAuthorization();
+builder.Services.AddHttpLogging(); 
 
 // Build connection string
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -84,6 +85,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseHttpLogging();
 }
 else
 {
