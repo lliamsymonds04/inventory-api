@@ -75,7 +75,7 @@ public class AuthController : ControllerBase
             PasswordHash = passwordHash,
             CreatedAt = DateTime.UtcNow,
             LastLogin = DateTime.UtcNow,
-            Role = "warehouse"
+            Role = "Warehouse"
         };
 
         _context.Users.Add(newUser);
