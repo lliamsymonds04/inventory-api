@@ -126,6 +126,11 @@ public class InventoryController : ControllerBase
     [Authorize(Roles = "Admin,Warehouse")]
     public async Task<IActionResult> RestockInventoryByWarehouse(int warehouseId, int productId, [FromBody] int quantity)
     {
+        if (quantity <= 0)
+        {
+            return BadRequest("Quantity must be greater than zero.");
+        }
+
         // Verify warehouse exists
         var warehouseExists = await _context.Warehouses.AnyAsync(w => w.Id == warehouseId);
         if (!warehouseExists)
@@ -170,33 +175,8 @@ public class InventoryController : ControllerBase
     public async Task<IActionResult> DepleteInventory(int id, int quantity)
     {
         var inventory = await _context.Inventory.FindAsync(id);
-        if (inventory == null)
-        {
-            return NotFound();
-        }
-
-        if (inventory.Quantity < quantity)
-        {
-            return BadRequest("Insufficient stock to deplete.");
-        }
-
-        inventory.Quantity -= quantity;
-        _context.Entry(inventory).State = EntityState.Modified;
-
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!InventoryExists(id))
-            {
-                return NotFound();
-            }
-            throw;
-        }
-
-        return NoContent();
+        
+        return await DepleteInventoryInternal(inventory, quantity);
     }
 
     [HttpPost("warehouse/{warehouseId}/deplete/{productId}")]
@@ -206,22 +186,33 @@ public class InventoryController : ControllerBase
         // Verify warehouse exists
         var warehouseExists = await _context.Warehouses.AnyAsync(w => w.Id == warehouseId);
         if (!warehouseExists)
-        {
             return NotFound($"Warehouse with ID {warehouseId} not found.");
-        }
 
         var inventory = await _context.Inventory
             .FirstOrDefaultAsync(i => i.ProductId == productId && i.WarehouseId == warehouseId);
-            
+
+        return await DepleteInventoryInternal(inventory, quantity, productId, warehouseId);
+    }
+
+    private async Task<IActionResult> DepleteInventoryInternal(
+        Inventory? inventory, int quantity, int? productId = null, int? warehouseId = null)
+    {
         if (inventory == null)
         {
-            return NotFound($"Inventory for product {productId} in warehouse {warehouseId} not found.");
+            return NotFound($"Inventory not found for product {productId} in warehouse {warehouseId}.");
         }
 
+        if (quantity <= 0)
+            return BadRequest("Quantity must be greater than zero.");
+
+        if (inventory == null)
+            return NotFound();
+
         if (inventory.Quantity < quantity)
-        {
             return BadRequest("Insufficient stock to deplete.");
-        }
+
+        if (inventory.Quantity - quantity < 0)
+            return BadRequest("Depletion would result in negative stock.");
 
         inventory.Quantity -= quantity;
         _context.Entry(inventory).State = EntityState.Modified;
@@ -230,16 +221,17 @@ public class InventoryController : ControllerBase
         {
             await _context.SaveChangesAsync();
 
-            // log the deplete
-            await _stockLogService.LogStockChangeAsync(
-                productId, warehouseId, -quantity, inventory.Quantity + quantity, "deplete", "system");
+            // Only log if productId and warehouseId are provided
+            if (productId.HasValue && warehouseId.HasValue)
+            {
+                await _stockLogService.LogStockChangeAsync(
+                    productId.Value, warehouseId.Value, -quantity, inventory.Quantity + quantity, "deplete", "system");
+            }
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!InventoryExists(productId))
-            {
+            if (!InventoryExists(inventory.Id))
                 return NotFound();
-            }
             throw;
         }
 
