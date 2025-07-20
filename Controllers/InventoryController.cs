@@ -116,7 +116,7 @@ public class InventoryController : ControllerBase
 
         // log the stock change
         await _stockLogService.LogStockChangeAsync(
-            productId, warehouseId, request.Quantity, 0, "Initial inventory creation", "system");
+            productId, warehouseId, request.Quantity, 0, ChangeType.InitialStock, "system");
         
         return CreatedAtAction(nameof(GetInventoryByWarehouseAndProduct),
             new { warehouseId = warehouseId, productId = productId }, inventory);
@@ -156,7 +156,7 @@ public class InventoryController : ControllerBase
 
             // log the restock
             await _stockLogService.LogStockChangeAsync(
-                productId, warehouseId, quantity, inventory.Quantity - quantity, "restock", "system");
+                productId, warehouseId, quantity, inventory.Quantity - quantity, ChangeType.Restock, "system");
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -225,7 +225,7 @@ public class InventoryController : ControllerBase
             if (productId.HasValue && warehouseId.HasValue)
             {
                 await _stockLogService.LogStockChangeAsync(
-                    productId.Value, warehouseId.Value, -quantity, inventory.Quantity + quantity, "deplete", "system");
+                    productId.Value, warehouseId.Value, -quantity, inventory.Quantity + quantity, ChangeType.Sale, "system");
             }
         }
         catch (DbUpdateConcurrencyException)
@@ -387,12 +387,12 @@ public class InventoryController : ControllerBase
             // log the outgoing transfer
             await _stockLogService.LogStockChangeAsync(
                 request.ProductId, request.SourceWarehouseId, -request.Quantity,
-                sourceInventory.Quantity + request.Quantity, "transfer out", "system");
+                sourceInventory.Quantity + request.Quantity, ChangeType.TransferOut, "system");
 
             // log the incoming transfer
             await _stockLogService.LogStockChangeAsync(
                 request.ProductId, request.DestinationWarehouseId, request.Quantity,
-                destinationInventory.Quantity - request.Quantity, "transfer in", "system");
+                destinationInventory.Quantity - request.Quantity, ChangeType.TransferIn, "system");
 
         }
         catch (DbUpdateConcurrencyException)

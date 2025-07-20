@@ -1,0 +1,2 @@
+UPDATE STOCKLOGS
+SET ChangeType = 0 

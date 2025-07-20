@@ -1,5 +1,4 @@
 using InventoryAPI.Data;
-using InventoryAPI.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace InventoryAPI.Services;
@@ -7,13 +6,13 @@ namespace InventoryAPI.Services;
 public interface IStockLogService
 {
     Task LogStockChangeAsync(int productId, int warehouseId,
-        int quantityChange, int quantityBefore, string changeType, string userId);
+        int quantityChange, int quantityBefore, ChangeType changeType, string userId);
 
     Task<IEnumerable<StockLog>> GetStockLogsAsync(int? productId = null, int? warehouseId = null,
-        DateTime? fromDate = null, DateTime? toDate = null, string? changeType = null);
+        DateTime? fromDate = null, DateTime? toDate = null, ChangeType? changeType = null);
 }
 
-public class StockLogService: IStockLogService
+public class StockLogService : IStockLogService
 {
     private readonly AppDbContext _context;
 
@@ -23,7 +22,7 @@ public class StockLogService: IStockLogService
     }
 
     public async Task LogStockChangeAsync(int productId, int warehouseId,
-        int quantityChange, int quantityBefore, string changeType, string userId)
+        int quantityChange, int quantityBefore, ChangeType changeType, string userId)
     {
         var stockLog = new StockLog
         {
@@ -31,7 +30,7 @@ public class StockLogService: IStockLogService
             WarehouseId = warehouseId,
             QuantityChange = quantityChange,
             QuantityBefore = quantityBefore,
-            QuantityAfter = quantityBefore + quantityChange, 
+            QuantityAfter = quantityBefore + quantityChange,
             UserId = userId,
             ChangeType = changeType,
             Timestamp = DateTime.UtcNow
@@ -42,7 +41,7 @@ public class StockLogService: IStockLogService
     }
 
     public async Task<IEnumerable<StockLog>> GetStockLogsAsync(int? productId = null, int? warehouseId = null,
-        DateTime? fromDate = null, DateTime? toDate = null, string? changeType = null)
+        DateTime? fromDate = null, DateTime? toDate = null, ChangeType? changeType = null)
     {
         var query = _context.StockLogs
             .Include(sl => sl.ProductId)
@@ -61,8 +60,10 @@ public class StockLogService: IStockLogService
         if (toDate.HasValue)
             query = query.Where(sl => sl.Timestamp <= toDate.Value);
 
-        if (!string.IsNullOrEmpty(changeType))
-            query = query.Where(sl => sl.ChangeType == changeType);
+        if (changeType.HasValue)
+        {
+            query = query.Where(sl => sl.ChangeType == changeType.Value);
+        }
 
         return await query.ToListAsync();
     }
