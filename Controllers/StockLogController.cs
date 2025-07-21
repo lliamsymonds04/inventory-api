@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using InventoryAPI.Models;
 using InventoryAPI.Services;
+using InventoryAPI.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using InventoryAPI.Data;
 using Microsoft.EntityFrameworkCore;
@@ -20,23 +21,9 @@ public class StockLogController : ControllerBase
         _stockLogService = stockLogService;
     }
 
-    [HttpGet]
-    [Authorize(Roles = "Admin,Warehouse")]
-    public async Task<ActionResult<IEnumerable<StockLog>>> GetStockLogs(
-        [FromQuery] int? productId = null,
-        [FromQuery] int? warehouseId = null,
-        [FromQuery] DateTime? fromDate = null,
-        [FromQuery] DateTime? toDate = null,
-        [FromQuery] ChangeType? changeType = null
-    )
-    {
-        var logs = await _stockLogService.GetStockLogsAsync(productId, warehouseId, fromDate, toDate, changeType);
-        return Ok(logs);
-    }
-
     [HttpGet("sales/today")]
     [Authorize(Roles = "Admin,Warehouse")]
-    public async Task<int> GetSalesTodayAsync()
+    public async Task<int> GetSalesToday()
     {
         var today = DateTime.UtcNow.Date;
         var logs = await _context.StockLogs
@@ -60,5 +47,22 @@ public class StockLogController : ControllerBase
         var totalSalesValue = salesByProduct.Sum(s => s.TotalSales * productPrices[s.ProductId]);
 
         return (int)totalSalesValue;
+    }
+
+
+    [HttpGet]
+    [Authorize(Roles = "Admin,Warehouse")]
+    public async Task<ActionResult<PagedResult<StockLog>>> GetStockLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 10,
+        [FromQuery] int? productId = null, [FromQuery] int? warehouseId = null,
+        [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null,
+        [FromQuery] ChangeType? changeType = null)
+    {
+        if (page < 1 || pageSize < 1)
+        {
+            return BadRequest("Page and PageSize must be greater than 0.");
+        }
+        var pagedResult = await _stockLogService.GetPagedStockLogsAsync(page, pageSize, productId, warehouseId, fromDate, toDate, changeType);
+        return Ok(pagedResult);
+
     }
 }
