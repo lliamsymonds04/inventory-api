@@ -32,6 +32,17 @@ public class ProductController : ControllerBase
         return product;
     }
 
+    [HttpGet("{productName}/id")]
+    public async Task<IActionResult> GetProductIdByName(string productName)
+    {
+        var product = await _context.Products.FirstOrDefaultAsync(p => p.Name == productName);
+        if (product == null)
+        {
+            return NotFound("Product not found.");
+        }
+        return Ok(new { Id = product.Id });
+    }
+
     [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<Product>> CreateProduct(Product product)
