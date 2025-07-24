@@ -10,7 +10,7 @@ public class StockLogDto
     public required int QuantityChange { get; set; }
     public required int QuantityBefore { get; set; }
     public required int QuantityAfter { get; set; }
-    public required DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public required DateTimeOffset Timestamp { get; set; }
     public string? Username { get; set; } // Username of the user who made the
     public string? ProductName { get; set; } // Name of the product
 

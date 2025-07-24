@@ -19,7 +19,7 @@ public class StockLog
     public required int QuantityChange { get; set; }
     public required int QuantityBefore { get; set; }
     public required int QuantityAfter { get; set; }
-    public required DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public required DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
     public required ChangeType ChangeType { get; set; }
     public int? UserId { get; set; } // User who made the change
     public User? User { get; set; } // Navigation property for User

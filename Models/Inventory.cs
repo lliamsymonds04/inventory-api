@@ -8,5 +8,5 @@ public class Inventory
     public int Quantity { get; set; }
     public int MinStockLevel { get; set; } = 10;
     public bool IsLowStock => Quantity < MinStockLevel;
-    public DateTime LastRestocked { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset LastRestocked { get; set; } = DateTimeOffset.UtcNow;
 }

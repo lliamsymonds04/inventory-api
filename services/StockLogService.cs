@@ -43,7 +43,7 @@ public class StockLogService : IStockLogService
             QuantityAfter = quantityBefore + quantityChange,
             UserId = userId,
             ChangeType = changeType,
-            Timestamp = DateTime.UtcNow
+            Timestamp = DateTimeOffset.UtcNow
         };
 
         _context.StockLogs.Add(stockLog);
