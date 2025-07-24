@@ -12,11 +12,13 @@ public class InventoryController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IStockLogService _stockLogService;
+    private readonly IAuthService _authService;
 
-    public InventoryController(AppDbContext context, IStockLogService stockLogService)
+    public InventoryController(AppDbContext context, IAuthService authService, IStockLogService stockLogService)
     {
         _context = context;
         _stockLogService = stockLogService;
+        _authService = authService;
     }
 
     [HttpGet]
@@ -115,8 +117,10 @@ public class InventoryController : ControllerBase
         await _context.SaveChangesAsync();
 
         // log the stock change
+        var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+        var userId = _authService.GetUserIdByJwt(token);
         await _stockLogService.LogStockChangeAsync(
-            productId, warehouseId, request.Quantity, 0, ChangeType.InitialStock, "system");
+            productId, warehouseId, request.Quantity, 0, ChangeType.InitialStock, userId);
         
         return CreatedAtAction(nameof(GetInventoryByWarehouseAndProduct),
             new { warehouseId = warehouseId, productId = productId }, inventory);
@@ -155,8 +159,10 @@ public class InventoryController : ControllerBase
             await _context.SaveChangesAsync();
 
             // log the restock
+            var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var userId =  _authService.GetUserIdByJwt(token);
             await _stockLogService.LogStockChangeAsync(
-                productId, warehouseId, quantity, inventory.Quantity - quantity, ChangeType.Restock, "system");
+                productId, warehouseId, quantity, inventory.Quantity - quantity, ChangeType.Restock, userId);
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -224,8 +230,11 @@ public class InventoryController : ControllerBase
             // Only log if productId and warehouseId are provided
             if (productId.HasValue && warehouseId.HasValue)
             {
+                var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                var userId = _authService.GetUserIdByJwt(token);
+                Console.WriteLine("User ID: " + userId);
                 await _stockLogService.LogStockChangeAsync(
-                    productId.Value, warehouseId.Value, -quantity, inventory.Quantity + quantity, ChangeType.Sale, "system");
+                    productId.Value, warehouseId.Value, -quantity, inventory.Quantity + quantity, ChangeType.Sale, userId);
             }
         }
         catch (DbUpdateConcurrencyException)
@@ -384,15 +393,18 @@ public class InventoryController : ControllerBase
         {
             await _context.SaveChangesAsync();
 
+            var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var userId = _authService.GetUserIdByJwt(token);
+
             // log the outgoing transfer
             await _stockLogService.LogStockChangeAsync(
                 request.ProductId, request.SourceWarehouseId, -request.Quantity,
-                sourceInventory.Quantity + request.Quantity, ChangeType.TransferOut, "system");
+                sourceInventory.Quantity + request.Quantity, ChangeType.TransferOut, userId);
 
             // log the incoming transfer
             await _stockLogService.LogStockChangeAsync(
                 request.ProductId, request.DestinationWarehouseId, request.Quantity,
-                destinationInventory.Quantity - request.Quantity, ChangeType.TransferIn, "system");
+                destinationInventory.Quantity - request.Quantity, ChangeType.TransferIn, userId);
 
         }
         catch (DbUpdateConcurrencyException)

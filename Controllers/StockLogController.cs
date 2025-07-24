@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using InventoryAPI.Models;
+using InventoryAPI.Dtos;
 using InventoryAPI.Services;
 using InventoryAPI.Helpers;
 using Microsoft.AspNetCore.Authorization;
@@ -52,7 +53,7 @@ public class StockLogController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles = "Admin,Warehouse")]
-    public async Task<ActionResult<PagedResult<StockLog>>> GetStockLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 10,
+    public async Task<ActionResult<PagedResult<StockLogDto>>> GetStockLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 10,
         [FromQuery] int? productId = null, [FromQuery] int? warehouseId = null,
         [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null,
         [FromQuery] ChangeType? changeType = null)

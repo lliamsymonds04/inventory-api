@@ -124,7 +124,7 @@ public class AuthController : ControllerBase
 
     private string HandleToken(User user)
     {
-        var token = _authService.GenerateJwtToken(user.Username, user.Role);
+        var token = _authService.GenerateJwtToken(user);
 
         var cookieOptions = new CookieOptions
         {

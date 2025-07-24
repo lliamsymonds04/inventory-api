@@ -4,12 +4,14 @@ using System.Security.Claims;
 using System.Text;
 using InventoryAPI.Data;
 using Microsoft.EntityFrameworkCore;
+using InventoryAPI.Models;
 
 public interface IAuthService
 {
-    string GenerateJwtToken(string username, string role);
+    string GenerateJwtToken(User user);
     ClaimsPrincipal? ValidateJwtToken(string token);
     Task<bool> UserExistsAsync(string username);
+    int GetUserIdByJwt(string token);
 }
 
 public class AuthService : IAuthService
@@ -24,7 +26,7 @@ public class AuthService : IAuthService
         _configuration = configuration;
     }
 
-    public string GenerateJwtToken(string username, string role)
+    public string GenerateJwtToken(User user)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"];
@@ -41,9 +43,9 @@ public class AuthService : IAuthService
 
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, username),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(ClaimTypes.Role, role)
+            new Claim(ClaimTypes.Role, user.Role)
         };
 
         var token = new JwtSecurityToken(
@@ -90,6 +92,25 @@ public class AuthService : IAuthService
             // Token validation failed
             return null;
         }
+    }
+
+    public int GetUserIdByJwt(string token)
+    {
+        var principal = ValidateJwtToken(token);
+        if (principal == null)
+        {
+            throw new UnauthorizedAccessException("Invalid JWT token.");
+        }
+
+        var userIdClaim = principal.FindFirst(JwtRegisteredClaimNames.Sub) ??
+                          principal.FindFirst(ClaimTypes.NameIdentifier);
+
+        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+        {
+            throw new UnauthorizedAccessException("User ID not found in JWT token.");
+        }
+
+        return userId;
     }
 
     public async Task<bool> UserExistsAsync(string username)
