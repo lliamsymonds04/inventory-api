@@ -2,6 +2,7 @@ using InventoryAPI.Data;
 using InventoryAPI.Helpers;
 using InventoryAPI.Dtos;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.RateLimiting;
 
 namespace InventoryAPI.Services;
 
@@ -10,16 +11,18 @@ public interface IStockLogService
     Task LogStockChangeAsync(int productId, int warehouseId,
         int quantityChange, int quantityBefore, ChangeType changeType, int? userId = null);
 
-    Task<IEnumerable<StockLog>> GetStockLogsAsync(int? productId = null, int? warehouseId = null,
+    Task<IEnumerable<StockLog>> GetStockLogsAsync(
+        string? productName = null, string? username = null, int? warehouseId = null,
         DateTime? fromDate = null, DateTime? toDate = null, ChangeType? changeType = null);
 
-    Task<IEnumerable<StockLogDto>> GetStockLogsDtosAsync(int? productId = null, int? warehouseId = null,
+    Task<IEnumerable<StockLogDto>> GetStockLogsDtosAsync(
+        string? productName = null, string? username = null, int? warehouseId = null,
         DateTime? fromDate = null, DateTime? toDate = null, ChangeType? changeType = null);
 
-    Task<PagedResult<StockLogDto>> GetPagedStockLogsAsync(int page, int pageSize,
-        int? productId = null, int? warehouseId = null,
-        DateTime? fromDate = null, DateTime? toDate = null,
-        ChangeType? changeType = null);
+    Task<PagedResult<StockLogDto>> GetPagedStockLogsAsync(
+        int page, int pageSize,
+        string? productName = null, string? username = null, int? warehouseId = null,
+        DateTime? fromDate = null, DateTime? toDate = null, ChangeType? changeType = null);
 }
 
 public class StockLogService : IStockLogService
@@ -50,7 +53,7 @@ public class StockLogService : IStockLogService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<StockLog>> GetStockLogsAsync(int? productId = null, int? warehouseId = null,
+    public async Task<IEnumerable<StockLog>> GetStockLogsAsync(string? productName = null, string? username = null, int? warehouseId = null,
         DateTime? fromDate = null, DateTime? toDate = null, ChangeType? changeType = null)
     {
         var query = _context.StockLogs
@@ -59,8 +62,13 @@ public class StockLogService : IStockLogService
             .Include(sl => sl.User) 
             .AsQueryable();
 
-        if (productId.HasValue)
-            query = query.Where(sl => sl.ProductId == productId.Value);
+        if (!string.IsNullOrEmpty(productName))
+            query = query.Where(sl => sl.Product != null && sl.Product.Name != null &&
+                sl.Product.Name.ToLower().Contains(productName.ToLower()));
+
+        if (!string.IsNullOrEmpty(username))
+            query = query.Where(sl => sl.User != null && sl.User.Username != null &&
+                sl.User.Username.ToLower().Contains(username.ToLower()));
 
         if (warehouseId.HasValue)
             query = query.Where(sl => sl.WarehouseId == warehouseId.Value);
@@ -79,10 +87,10 @@ public class StockLogService : IStockLogService
         return await query.ToListAsync();
     }
 
-    public async Task<IEnumerable<StockLogDto>> GetStockLogsDtosAsync(int? productId = null, int? warehouseId = null,
-        DateTime? fromDate = null, DateTime? toDate = null, ChangeType? changeType = null)
+    public async Task<IEnumerable<StockLogDto>> GetStockLogsDtosAsync(string? productName = null, string? username = null,
+        int? warehouseId = null, DateTime? fromDate = null, DateTime? toDate = null, ChangeType? changeType = null)
     {
-        var logs = await GetStockLogsAsync(productId, warehouseId, fromDate, toDate, changeType);
+        var logs = await GetStockLogsAsync(productName, username, warehouseId, fromDate, toDate, changeType);
         if (logs == null || !logs.Any())
             return Enumerable.Empty<StockLogDto>();
 
@@ -90,11 +98,11 @@ public class StockLogService : IStockLogService
     }
 
     public async Task<PagedResult<StockLogDto>> GetPagedStockLogsAsync(int page, int pageSize,
-        int? productId = null, int? warehouseId = null,
+        string? productName = null, string? username = null, int? warehouseId = null,
         DateTime? fromDate = null, DateTime? toDate = null,
         ChangeType? changeType = null)
     {
-        var logs = await GetStockLogsDtosAsync(productId, warehouseId, fromDate, toDate, changeType);
+        var logs = await GetStockLogsDtosAsync(productName, username, warehouseId, fromDate, toDate, changeType);
         var totalCount = logs.Count();
 
         var items = logs

@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using InventoryAPI.Models;
 using InventoryAPI.Dtos;
 using InventoryAPI.Services;
 using InventoryAPI.Helpers;
@@ -54,7 +53,7 @@ public class StockLogController : ControllerBase
     [HttpGet]
     [Authorize(Roles = "Admin,Warehouse")]
     public async Task<ActionResult<PagedResult<StockLogDto>>> GetStockLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 10,
-        [FromQuery] int? productId = null, [FromQuery] int? warehouseId = null,
+        [FromQuery] string? productName = null, [FromQuery] string? username = null, [FromQuery] int? warehouseId = null,
         [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null,
         [FromQuery] ChangeType? changeType = null)
     {
@@ -62,8 +61,8 @@ public class StockLogController : ControllerBase
         {
             return BadRequest("Page and PageSize must be greater than 0.");
         }
-        var pagedResult = await _stockLogService.GetPagedStockLogsAsync(page, pageSize, productId, warehouseId, fromDate, toDate, changeType);
-        return Ok(pagedResult);
 
+        var pagedResult = await _stockLogService.GetPagedStockLogsAsync(page, pageSize, productName, username, warehouseId, fromDate, toDate, changeType);
+        return Ok(pagedResult);
     }
 }
