@@ -25,9 +25,13 @@ public class StockLogController : ControllerBase
     [Authorize(Roles = "Admin,Warehouse")]
     public async Task<int> GetSalesToday()
     {
-        var today = DateTime.UtcNow.Date;
+        var timezone = TimeZoneInfo.FindSystemTimeZoneById("Australia/Sydney");
+        var nowInZone = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timezone);
+        var startOfDay = new DateTimeOffset(nowInZone.Year, nowInZone.Month, nowInZone.Day, 0, 0, 0, timezone.BaseUtcOffset);
+        var endOfDay = startOfDay.AddDays(1);
+
         var logs = await _context.StockLogs
-            .Where(sl => sl.Timestamp >= today && sl.ChangeType == ChangeType.Sale)
+            .Where(sl => sl.Timestamp >= startOfDay && sl.Timestamp < endOfDay && sl.ChangeType == ChangeType.Sale)
             .ToListAsync();
 
         //group by product
