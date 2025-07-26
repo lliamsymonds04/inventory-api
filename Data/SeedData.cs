@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using InventoryAPI.Data;
 using InventoryAPI.Models;
+using InventoryAPI.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
@@ -106,6 +107,8 @@ public static class SeedData
             return; // Base inventory already exists
         }
 
+        var stockLogService = serviceProvider.GetRequiredService<IStockLogService>();
+
         var baseWarehouse = await context.Warehouses.FirstOrDefaultAsync();
         if (baseWarehouse == null)
         {
@@ -123,6 +126,13 @@ public static class SeedData
                 MinStockLevel = 10,
             };
             context.Inventory.Add(inventoryItem);
+            stockLogService.LogStockChangeAsync(
+                product.Id, 
+                baseWarehouse.Id, 
+                inventoryItem.Quantity, 
+                0, 
+                ChangeType.InitialStock
+            ).GetAwaiter().GetResult(); // Log initial stock change synchronously for seeding
         }
         
         Console.WriteLine("==/ Created base inventory");
