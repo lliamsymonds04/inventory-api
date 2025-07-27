@@ -19,20 +19,21 @@ builder.Services.AddHttpLogging();
 
 // Build connection string
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-var databasePassword = builder.Configuration["DatabasePassword"];
 
-if (string.IsNullOrEmpty(databasePassword))
+// Only replace if the placeholder exists (for local/dev)
+if (connectionString != null && connectionString.Contains("{DatabasePassword}"))
 {
-    throw new InvalidOperationException("Database password is not configured.");
+    var databasePassword = builder.Configuration["DatabasePassword"];
+    if (string.IsNullOrEmpty(databasePassword))
+    {
+        throw new InvalidOperationException("Database password is not configured.");
+    }
+    connectionString = connectionString.Replace("{DatabasePassword}", databasePassword);
 }
-
-if (string.IsNullOrEmpty(connectionString))
+else if (string.IsNullOrEmpty(connectionString))
 {
     throw new InvalidOperationException("Database connection string is not configured.");
 }
-
-connectionString = connectionString.Replace("{DatabasePassword}", databasePassword);
-
 // Add DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
@@ -89,6 +90,9 @@ builder.Services.AddHttpsRedirection(options =>
 // Build App
 var app = builder.Build();
 
+// Cors
+app.UseCors("AllowFrontend");
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -112,8 +116,7 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 // Jwt authentication
 app.UseMiddleware<JwtFromCookieMiddleware>();
 
-// Cors
-app.UseCors("AllowFrontend");
+
 
 
 app.UseAuthentication();
