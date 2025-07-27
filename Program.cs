@@ -21,6 +21,7 @@ builder.Services.AddHttpLogging();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Only replace if the placeholder exists (for local/dev)
+Console.WriteLine($"Connection String: {connectionString}");
 if (connectionString != null && connectionString.Contains("{DatabasePassword}"))
 {
     var databasePassword = builder.Configuration["DatabasePassword"];
