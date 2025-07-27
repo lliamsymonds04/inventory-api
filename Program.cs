@@ -21,7 +21,6 @@ builder.Services.AddHttpLogging();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Only replace if the placeholder exists (for local/dev)
-Console.WriteLine($"Connection String: {connectionString}");
 if (connectionString != null && connectionString.Contains("{DatabasePassword}"))
 {
     var databasePassword = builder.Configuration["DatabasePassword"];
@@ -106,10 +105,18 @@ else
 }
 
 // Seed data
-using (var scope = app.Services.CreateScope())
+try
 {
-    var services = scope.ServiceProvider;
-    await SeedData.InitializeAsync(services);
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        await SeedData.InitializeAsync(services);
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
+    throw;
 }
 
 // Exception handling
