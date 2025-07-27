@@ -76,7 +76,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend",
         builder => builder.WithOrigins(
                         "http://localhost:3000", 
-                        "https://inventory-viewer-lliam.vercel.app/")
+                        "https://inventory-viewer-lliam.vercel.app")
                           .AllowAnyMethod()
                           .AllowAnyHeader()
                           .AllowCredentials());
