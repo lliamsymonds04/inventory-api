@@ -106,19 +106,22 @@ else
 }
 
 // Seed data
-// try
-// {
-//     using (var scope = app.Services.CreateScope())
-//     {
-//         var services = scope.ServiceProvider;
-//         await SeedData.InitializeAsync(services);
-//     }
-// }
-// catch (Exception ex)
-// {
-//     Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
-//     throw;
-// }
+if (args.Contains("--seed"))
+{
+    Console.WriteLine("Seeding database...");
+    try
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+            await SeedData.InitializeAsync(services);
+        }
+    } catch (Exception ex)
+    {
+        Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
+        throw;
+    }
+}
 
 // Exception handling
 app.UseMiddleware<GlobalExceptionMiddleware>();
