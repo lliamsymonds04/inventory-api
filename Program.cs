@@ -19,19 +19,21 @@ builder.Services.AddHttpLogging();
 
 // Build connection string
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-var databasePassword = builder.Configuration["DatabasePassword"];
 
-if (string.IsNullOrEmpty(databasePassword))
+// Only replace if the placeholder exists (for local/dev)
+if (connectionString != null && connectionString.Contains("{DatabasePassword}"))
 {
-    throw new InvalidOperationException("Database password is not configured.");
+    var databasePassword = builder.Configuration["DatabasePassword"];
+    if (string.IsNullOrEmpty(databasePassword))
+    {
+        throw new InvalidOperationException("Database password is not configured.");
+    }
+    connectionString = connectionString.Replace("{DatabasePassword}", databasePassword);
 }
-
-if (string.IsNullOrEmpty(connectionString))
+else if (string.IsNullOrEmpty(connectionString))
 {
     throw new InvalidOperationException("Database connection string is not configured.");
 }
-
-connectionString = connectionString.Replace("{DatabasePassword}", databasePassword);
 
 // Add DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -74,7 +76,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend",
         builder => builder.WithOrigins(
                         "http://localhost:3000", 
-                        "https://inventory-viewer-lliam.vercel.app/")
+                        "https://inventory-viewer-lliam.vercel.app")
                           .AllowAnyMethod()
                           .AllowAnyHeader()
                           .AllowCredentials());
@@ -89,6 +91,9 @@ builder.Services.AddHttpsRedirection(options =>
 // Build App
 var app = builder.Build();
 
+// Cors
+app.UseCors("AllowFrontend");
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -100,10 +105,18 @@ else
 }
 
 // Seed data
-using (var scope = app.Services.CreateScope())
+try
 {
-    var services = scope.ServiceProvider;
-    await SeedData.InitializeAsync(services);
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        await SeedData.InitializeAsync(services);
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
+    throw;
 }
 
 // Exception handling
@@ -112,8 +125,7 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 // Jwt authentication
 app.UseMiddleware<JwtFromCookieMiddleware>();
 
-// Cors
-app.UseCors("AllowFrontend");
+
 
 
 app.UseAuthentication();

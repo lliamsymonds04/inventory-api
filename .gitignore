@@ -108,6 +108,3 @@ StyleCopReport.xml
 
 # dotenv
 .env
-
-Migrations/
-# Ignore migrations folder if it exists
