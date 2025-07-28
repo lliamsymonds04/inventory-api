@@ -3,16 +3,20 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using InventoryAPI.Models;
 using InventoryAPI.Data;
+using InventoryAPI.Dtos;
+
 
 [ApiController]
 [Route("api/[controller]")]
 public class ProductController : ControllerBase
 {
+    private readonly IProductService _productService;
     private readonly AppDbContext _context;
 
-    public ProductController(AppDbContext context)
+    public ProductController(AppDbContext context, IProductService productService)
     {
         _context = context;
+        _productService = productService;
     }
 
     [HttpGet]
@@ -45,10 +49,26 @@ public class ProductController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
-    public async Task<ActionResult<Product>> CreateProduct(Product product)
+    public async Task<ActionResult<Product>> CreateProduct([FromBody] ProductDto productDto)
     {
-        _context.Products.Add(product);
-        await _context.SaveChangesAsync();
+        if (productDto == null)
+        {
+            return BadRequest("Product data is required.");
+        }
+
+        var product = new Product
+        {
+            Name = productDto.Name,
+            Description = productDto.Description,
+            Price = productDto.Price,
+        };
+
+        await _productService.CreateProductAsync(product);
+
+        //create the inventory for the product
+        var warehouseId = 1;
+        await _productService.AddInventoryAsync(product.Id, warehouseId, 0, productDto.MinStockLevel);
+
         return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
     }
 

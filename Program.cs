@@ -42,6 +42,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Register custom services
 builder.Services.AddScoped<IStockLogService, StockLogService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 
 // Configure JWT authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -124,9 +125,6 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 
 // Jwt authentication
 app.UseMiddleware<JwtFromCookieMiddleware>();
-
-
-
 
 app.UseAuthentication();
 app.UseAuthorization();
