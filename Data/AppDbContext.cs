@@ -35,25 +35,6 @@ namespace InventoryAPI.Data
                     .HasColumnType("decimal(18,2)")
                     .IsRequired();
             });
-
-            // StockLog relationships
-            // modelBuilder.Entity<StockLog>()
-            //     .HasOne(sl => sl.Product)
-            //     .WithMany()
-            //     .HasForeignKey(sl => sl.ProductId)
-            //     .OnDelete(DeleteBehavior.Restrict);
-
-            // modelBuilder.Entity<StockLog>()
-            //     .HasOne(sl => sl.Warehouse)
-            //     .WithMany()
-            //     .HasForeignKey(sl => sl.WarehouseId)
-            //     .OnDelete(DeleteBehavior.Restrict);
-
-            // modelBuilder.Entity<StockLog>()
-            //     .HasOne(sl => sl.User)
-            //     .WithMany()
-            //     .HasForeignKey(sl => sl.UserId)
-            //     .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }
